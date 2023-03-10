@@ -32,9 +32,3 @@ def load_config(path: str):
             admin_id=int(tg_bot['admin_id'])
         )
     )
-
-
-if __name__ == '__main__':
-    config_ = load_config(r'D:\PycharmProjects\Pt9\bots\food_bot\config\bot_config.ini')
-    print(config_.tg_bot.token)
-    print(config_.tg_bot.admin_id)
