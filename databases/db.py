@@ -80,21 +80,6 @@ class Database:
         except Exception as ex:
             logging.error(repr(ex))
 
-    def _check_user(self, user_id: int) -> bool or None:
-        """Checking if a user exists
-
-        :param user_id: user_id
-        :return: True/None
-        """
-        with self.connection:
-            users = self.cursor.execute('SELECT id '
-                                        'FROM users '
-                                        'WHERE id = ?', (user_id,)).fetchall()
-            if not users:
-                return True
-            else:
-                return
-
     def add_user(self, user_id: int, is_admin: bool) -> None:
         """Adding a user to the database
 
@@ -104,15 +89,15 @@ class Database:
         """
         try:
             with self.connection:
-                if self._check_user(user_id=user_id):
-                    self.cursor.execute(
-                        "INSERT INTO users (id, is_admin, is_active, last_active)"
-                        "VALUES (?, ?, ?, datetime('now', 'localtime'))",
-                        (user_id, is_admin, True))
-                    if is_admin:
-                        logging.info(f'Add new admin [{user_id}]')
-                    if not is_admin:
-                        logging.info(f'Add new user [{user_id}]')
+                self.cursor.execute(
+                    "INSERT INTO users (id, is_admin, is_active, last_active)"
+                    "SELECT ?, ?, ?, datetime('now', 'localtime')"
+                    "WHERE NOT EXISTS(SELECT id FROM users WHERE id = ?)",
+                    (user_id, is_admin, True))
+                if is_admin:
+                    logging.info(f'Add new admin [{user_id}]')
+                if not is_admin:
+                    logging.info(f'Add new user [{user_id}]')
         except IntegrityError:
             logging.info(f'Data not saved, such user [{user_id}] already exists')
 
@@ -124,11 +109,10 @@ class Database:
         """
         try:
             with self.connection:
-                if not self._check_user(user_id=user_id):
-                    self.cursor.execute("UPDATE users "
-                                        "SET last_active = datetime('now', 'localtime')"
-                                        "WHERE id = ?",
-                                        (user_id,))
+                self.cursor.execute("UPDATE users "
+                                    "SET last_active = datetime('now', 'localtime')"
+                                    "WHERE id = ? AND EXISTS (SELECT id FROM users WHERE id = ?)",
+                                    (user_id,))
         except Exception as ex:
             logging.error(repr(ex))
 
