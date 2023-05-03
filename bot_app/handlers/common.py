@@ -1,7 +1,7 @@
 from aiogram import Dispatcher, types
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters import Text
-from aiogram.types import InlineKeyboardButton
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 from handlers.expense import DATABASE
 
@@ -14,13 +14,14 @@ async def cmd_start(message: types.Message, state: FSMContext):
     :return:
     """
     await state.finish()
-    await message.answer('Привет, я бот, который поможет тебе вести финансы\n\n'
-                         'Для добавления расхода нажмите: /add_expense\n'
-                         'Для получения расходов за все время нажмите: /get_all_expenses\n'
-                         'Для получения расходов за месяц нажмите /get_month_expenses\n'
-                         'Для получения расходов за неделю нажмите /get_week_expenses\n'
-                         'Для получения расходов за день нажмите /get_day_expenses\n',
-                         reply_markup=types.ReplyKeyboardRemove())
+    if DATABASE.check_user(user_id=message.from_user.id):
+        await message.answer('Привет, я бот, который поможет тебе вести финансы\n\n'
+                             'Для добавления расхода нажмите: /add_expense\n'
+                             'Для получения расходов за все время нажмите: /get_all_expenses\n'
+                             'Для получения расходов за месяц нажмите /get_month_expenses\n'
+                             'Для получения расходов за неделю нажмите /get_week_expenses\n'
+                             'Для получения расходов за день нажмите /get_day_expenses\n',
+                             reply_markup=types.ReplyKeyboardRemove())
 
 
 async def get_list_of_expenses(message: types.Message):

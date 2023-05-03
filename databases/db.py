@@ -46,26 +46,41 @@ class Database:
         except OperationalError:
             logging.info('Database users already exists')
 
-    def check_user(self, user_id: int):
+    def check_user(self, user_id: int = None, username: str = None) -> bool | int:
         """Checking if a user exists in the database
 
+        :param username: username
         :param user_id: user id
         :return: True if user exists, False if user not exists
         """
-        try:
-            with self.connection:
-                result = self.cursor.execute(
-                    "SELECT id "
-                    "FROM users "
-                    "WHERE id = ?",
-                    (user_id,)
-                )
-                if result.fetchall():
-                    return True
-                else:
-                    return False
-        except Exception as ex:
-            logging.error(repr(ex))
+        if not username:
+            try:
+                with self.connection:
+                    result = self.cursor.execute(
+                        "SELECT id "
+                        "FROM users "
+                        "WHERE id = ?",
+                        (user_id,)
+                    )
+                    if result.fetchall():
+                        return True
+                    else:
+                        return False
+            except Exception as ex:
+                logging.error(repr(ex))
+        elif username:
+            try:
+                with self.connection:
+                    self.cursor.execute(
+                        "SELECT username "
+                        "FROM users "
+                        "WHERE username = ?",
+                        (username,)
+                    )
+                    result = bool(len(self.cursor.fetchall()))
+                    return result
+            except Exception as ex:
+                logging.error(repr(ex))
 
     def get_categories(self) -> Generator:
         """Getting all categories from the database
@@ -119,13 +134,17 @@ class Database:
                     "SELECT ?, ?, ?, ?, ?, datetime('now', 'localtime')"
                     "WHERE NOT EXISTS(SELECT id FROM users WHERE id = ?)",
                     (user_id, is_admin, True, username, password, user_id))
+
+                if self.cursor.rowcount == 0:
+                    raise ValueError(f"User with ID [{user_id}] already exists in the database")
                 if is_admin:
                     logging.info(f'Add new admin [{user_id}]')
-                if not is_admin:
+                elif not is_admin:
                     logging.info(f'Add new user [{user_id}]')
             return True
-        except IntegrityError:
-            logging.info(f'Data not saved, such user [{user_id}] already exists')
+        except ValueError as ex:
+            logging.warning(f'{ex}')
+            return False
 
     def update_last_active(self, user_id: int) -> bool:
         """Update last user activity
@@ -240,6 +259,6 @@ class Database:
         """
         if os.path.exists(db_file):
             os.remove(db_file)
-            logging.info("The database file has been deleted.")
+            logging.warning("The database file has been deleted.")
         else:
-            logging.info("Database file not found.")
+            logging.warning("Database file not found.")

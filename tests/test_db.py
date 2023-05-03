@@ -7,6 +7,7 @@ from databases.db import Database, Category, GetExpenses
 class TestDatabase(unittest.TestCase):
     db_path = fr'{BASE_DIR}/tests/test.db'
     create_db_script = fr'{BASE_DIR}/databases/create_db.sql'
+
     user_id = 1
     is_admin = True
     username = 'tester'
@@ -39,6 +40,11 @@ class TestDatabase(unittest.TestCase):
     def test_check_user_not_exists(self):
         result = self.db.check_user(2)
         self.assertEqual(result, False)
+
+    def test_check_user_by_username(self):
+        self.db.add_user(self.user_id, self.is_admin, self.username, self.password)
+        result = self.db.check_user(user_id=self.user_id, username=self.username)
+        self.assertEqual(result, True)
 
     def test_add_expense(self):
         self.db.add_user(self.user_id, self.is_admin, self.username, self.password)
