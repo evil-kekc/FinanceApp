@@ -5,8 +5,8 @@ from aiogram import Bot
 from aiogram.types import BotCommand
 
 from app.handlers import add_expenses, common_handlers, get_expenses
-from config.bot_config import bot, dp, BASE_DIR, ADMIN_ID, LOGGER
-from config.middlewares import AccessMiddleware, UpdateLastActiveMiddleware, ThrottlingMiddleware
+from config.bot_config import bot, dp, BASE_DIR, LOGGER
+from config.middlewares import UpdateLastActiveMiddleware, ThrottlingMiddleware
 
 
 async def set_commands(bot: Bot):
@@ -37,7 +37,6 @@ async def main():
                         format="%(asctime)s | %(levelname)s | %(funcName)s: %(lineno)d | %(message)s",
                         datefmt='%H:%M:%S')
     logging.info('Starting bot')
-    dp.middleware.setup(AccessMiddleware(ADMIN_ID))
     dp.middleware.setup(UpdateLastActiveMiddleware())
     dp.middleware.setup(ThrottlingMiddleware(limit=0.6))
 

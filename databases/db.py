@@ -1,4 +1,5 @@
 import logging
+import os
 import sqlite3 as sq
 from sqlite3 import OperationalError, IntegrityError
 from typing import NamedTuple, Generator
@@ -45,6 +46,27 @@ class Database:
         except OperationalError:
             logging.info('Database users already exists')
 
+    def check_user(self, user_id: int):
+        """Checking if a user exists in the database
+
+        :param user_id: user id
+        :return: True if user exists, False if user not exists
+        """
+        try:
+            with self.connection:
+                result = self.cursor.execute(
+                    "SELECT id "
+                    "FROM users "
+                    "WHERE id = ?",
+                    (user_id,)
+                )
+                if result.fetchall():
+                    return True
+                else:
+                    return False
+        except Exception as ex:
+            logging.error(repr(ex))
+
     def get_categories(self) -> Generator:
         """Getting all categories from the database
 
@@ -60,13 +82,13 @@ class Database:
         except Exception as ex:
             logging.error(repr(ex))
 
-    def add_expense(self, user_id: int, amount: float, category_codename: str) -> None:
+    def add_expense(self, user_id: int, amount: float, category_codename: str) -> bool:
         """Adding an expense
 
         :param user_id: user id
         :param amount: expense amount
         :param category_codename: expense category code
-        :return: None
+        :return: bool
         """
         try:
             with self.connection:
@@ -74,45 +96,50 @@ class Database:
                     "INSERT INTO expense (id, amount, created, category_codename)"
                     "VALUES (?, ?, datetime('now', 'localtime'), ?)",
                     (user_id, amount, category_codename))
+            return True
         except IntegrityError as ex:
             logging.error(repr(ex))
 
         except Exception as ex:
             logging.error(repr(ex))
 
-    def add_user(self, user_id: int, is_admin: bool) -> None:
+    def add_user(self, user_id: int, is_admin: bool, username: str, password: str) -> bool:
         """Adding a user to the database
 
+        :param username: username
+        :param password: password
         :param is_admin: bool
         :param user_id: user id
-        :return: None
+        :return: bool
         """
         try:
             with self.connection:
                 self.cursor.execute(
-                    "INSERT INTO users (id, is_admin, is_active, last_active)"
-                    "SELECT ?, ?, ?, datetime('now', 'localtime')"
+                    "INSERT INTO users (id, is_admin, is_active, username, password, last_active)"
+                    "SELECT ?, ?, ?, ?, ?, datetime('now', 'localtime')"
                     "WHERE NOT EXISTS(SELECT id FROM users WHERE id = ?)",
-                    (user_id, is_admin, True))
+                    (user_id, is_admin, True, username, password, user_id))
                 if is_admin:
                     logging.info(f'Add new admin [{user_id}]')
                 if not is_admin:
                     logging.info(f'Add new user [{user_id}]')
+            return True
         except IntegrityError:
             logging.info(f'Data not saved, such user [{user_id}] already exists')
 
-    def update_last_active(self, user_id: int) -> None:
+    def update_last_active(self, user_id: int) -> bool:
         """Update last user activity
 
         :param user_id: user id
-        :return: None
+        :return: bool
         """
         try:
             with self.connection:
                 self.cursor.execute("UPDATE users "
                                     "SET last_active = datetime('now', 'localtime')"
                                     "WHERE id = ? AND EXISTS (SELECT id FROM users WHERE id = ?)",
-                                    (user_id,))
+                                    (user_id, user_id))
+            return True
         except Exception as ex:
             logging.error(repr(ex))
 
@@ -205,3 +232,14 @@ class Database:
 
         except Exception as ex:
             logging.error(repr(ex))
+
+    def delete_db(self, db_file: str):
+        """Deleting a database
+
+        :return: None
+        """
+        if os.path.exists(db_file):
+            os.remove(db_file)
+            logging.info("The database file has been deleted.")
+        else:
+            logging.info("Database file not found.")
