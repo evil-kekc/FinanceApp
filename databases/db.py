@@ -26,7 +26,7 @@ class GetExpenses(NamedTuple):
 
 class Database:
     def __init__(self, db_file: str, sql_script_file: str):
-        self.connection = sq.connect(db_file)
+        self.connection = sq.connect(db_file, check_same_thread=False)
         self.connection.execute("PRAGMA foreign_keys = ON")
         self.cursor = self.connection.cursor()
         self.sql_script = sql_script_file
@@ -47,10 +47,25 @@ class Database:
         except OperationalError:
             logging.info('Database users already exists')
 
-    def check_user(self, user_id: int = None, username: str = None, password: str = None) -> bool | int:
+    def _get_user_id_by_username(self, username: str) -> int:
+        """Getting user id by username
+
+        :param username: username
+        :return: int user id
+        """
+        try:
+            with self.connection:
+                result = self.cursor.execute("SELECT id "
+                                             "FROM users "
+                                             "WHERE username = ?",
+                                             (username,))
+                return result.fetchone()[0]
+        except Exception as ex:
+            logging.error(repr(ex))
+
+    def check_user(self, user_id: int = None, username: str = None) -> bool | int:
         """Checking if a user exists in the database
 
-        :param password: password
         :param username: username
         :param user_id: user id
         :return: True if user exists, False if user not exists
@@ -70,20 +85,7 @@ class Database:
                         return False
             except Exception as ex:
                 logging.error(repr(ex))
-        elif username and password:
-            try:
-                with self.connection:
-                    password_hash = hashlib.sha256(password.encode('utf-8')).hexdigest()
-                    self.cursor.execute(
-                        "SELECT username "
-                        "FROM users "
-                        "WHERE username = ? AND password = ?",
-                        (username, password_hash)
-                    )
-                    result = bool(len(self.cursor.fetchall()))
-                    return result
-            except Exception as ex:
-                logging.error(repr(ex))
+
         elif username:
             try:
                 with self.connection:
@@ -92,6 +94,28 @@ class Database:
                         "FROM users "
                         "WHERE username = ?",
                         (username,)
+                    )
+                    result = bool(len(self.cursor.fetchall()))
+                    return result
+            except Exception as ex:
+                logging.error(repr(ex))
+
+    def check_user_by_username_and_password(self, username: str = None, password: str = None) -> bool:
+        """Checking if a user exists in the database by username and password
+
+        :param username: username
+        :param password: password
+        :return: bool
+        """
+        if username and password:
+            try:
+                with self.connection:
+                    password_hash = hashlib.sha256(password.encode('utf-8')).hexdigest()
+                    self.cursor.execute(
+                        "SELECT username "
+                        "FROM users "
+                        "WHERE username = ? AND password = ?",
+                        (username, password_hash)
                     )
                     result = bool(len(self.cursor.fetchall()))
                     return result
@@ -113,14 +137,33 @@ class Database:
         except Exception as ex:
             logging.error(repr(ex))
 
-    def add_expense(self, user_id: int, amount: float, category_codename: str) -> bool:
+    def get_full_category_codename_by_substring(self, substring: str) -> str:
+        """Getting the codename of the category by the occurrence of a substring in the name of the category
+
+        :param substring: category name
+        :return:
+        """
+        try:
+            with self.connection:
+                result = self.cursor.execute("SELECT codename "
+                                             "FROM categories "
+                                             "WHERE name LIKE ?",
+                                             (f'%{substring.lower()}',))
+                return result.fetchone()[0]
+        except Exception as ex:
+            logging.error(repr(ex))
+
+    def add_expense(self, amount: float, category_codename: str, user_id: int = None, username: str = None) -> bool:
         """Adding an expense
 
-        :param user_id: user id
+        :param username: optional parameter username
+        :param user_id: optional parameter user id
         :param amount: expense amount
         :param category_codename: expense category code
         :return: bool
         """
+        if not user_id:
+            user_id = self._get_user_id_by_username(username=username)
         try:
             with self.connection:
                 self.cursor.execute(
@@ -179,6 +222,22 @@ class Database:
         except Exception as ex:
             logging.error(repr(ex))
 
+    def _get_category_name_by_codename(self, codename: str) -> str:
+        """Getting category name by codename
+
+        :param codename: category codename
+        :return: str category name
+        """
+        try:
+            with self.connection:
+                result = self.cursor.execute("SELECT name "
+                                             "FROM categories "
+                                             "WHERE codename = ?",
+                                             (codename,))
+                return result.fetchone()[0].title()
+        except Exception as ex:
+            logging.error(repr(ex))
+
     def _get_all_expenses(self, user_id: int, category: str = None) -> Generator:
         """Getting the sum of all user expenses
         :param category: category of expense
@@ -195,7 +254,7 @@ class Database:
                                                       (user_id, codename)).fetchall()[0][0]
                 if not sum_of_expenses:
                     continue
-
+                codename = self._get_category_name_by_codename(codename=codename)
                 result = GetExpenses(category=codename, amount=sum_of_expenses)
                 yield result
         else:
@@ -203,6 +262,7 @@ class Database:
                                                   "FROM expense "
                                                   "WHERE id = ? AND category_codename = ?",
                                                   (user_id, category)).fetchall()[0][0]
+            category = self._get_category_name_by_codename(codename=category)
             result = GetExpenses(category=category, amount=sum_of_expenses)
             yield result
 
@@ -227,6 +287,7 @@ class Database:
                                                       (user_id, codename)).fetchall()[0][0]
                 if not period_expenses:
                     continue
+                codename = self._get_category_name_by_codename(codename=codename)
                 result = GetExpenses(category=codename, amount=period_expenses)
                 yield result
         else:
@@ -240,14 +301,18 @@ class Database:
                                                   (user_id, category))
             yield period_expenses.fetchall()[0][0]
 
-    def get_sum_of_expenses(self, user_id: int, category: str = None, timedelta: str = None) -> Generator:
+    def get_sum_of_expenses(self, user_id: int = None, category: str = None, timedelta: str = None,
+                            username: str = None) -> Generator:
         """Getting user expenses
 
+        :param username: optional parameter username
         :param timedelta: period
         :param category: category of expense
         :param user_id: user id
         :return: sum of all user expenses
         """
+        if not user_id and username:
+            user_id = self._get_user_id_by_username(username=username)
         try:
             with self.connection:
                 if not timedelta:

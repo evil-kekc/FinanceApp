@@ -48,12 +48,22 @@ class TestDatabase(unittest.TestCase):
 
     def test_check_user_by_username_and_password(self):
         self.db.add_user(self.user_id, self.is_admin, self.username, self.password)
-        result = self.db.check_user(user_id=self.user_id, username=self.username, password=self.password)
+        result = self.db.check_user_by_username_and_password(username=self.username, password=self.password)
         self.assertEqual(result, True)
 
-    def test_add_expense(self):
+    def test_get_user_id_py_username(self):
+        self.db.add_user(self.user_id, self.is_admin, self.username, self.password)
+        result = self.db._get_user_id_by_username(username=self.username)
+        self.assertEqual(result, self.user_id)
+
+    def test_add_expense_by_user_id(self):
         self.db.add_user(self.user_id, self.is_admin, self.username, self.password)
         result = self.db.add_expense(user_id=self.user_id, amount=5, category_codename='products')
+        self.assertEqual(result, True)
+
+    def test_add_expense_by_user_name(self):
+        self.db.add_user(self.user_id, self.is_admin, self.username, self.password)
+        result = self.db.add_expense(username=self.username, amount=5, category_codename='products')
         self.assertEqual(result, True)
 
     def test_add_user(self):
@@ -64,6 +74,39 @@ class TestDatabase(unittest.TestCase):
         self.db.add_user(self.user_id, self.is_admin, self.username, self.password)
         result = self.db.update_last_active(self.user_id)
         self.assertEqual(result, True)
+
+    def test_get_sum_of_all_expenses_all_by_username(self):
+        self.db.add_user(self.user_id, self.is_admin, self.username, self.password)
+        self.db.add_expense(user_id=self.user_id, amount=5, category_codename='products')
+        self.db.add_expense(user_id=self.user_id, amount=5, category_codename='books')
+        result = self.db.get_sum_of_expenses(username=self.username)
+        first_output = GetExpenses(category='products', amount=5.0)
+        second_output = GetExpenses(category='books', amount=5.0)
+        first_result = result.__next__()
+        second_result = result.__next__()
+        self.assertEqual(first_result, first_output)
+        self.assertEqual(second_result, second_output)
+
+    def test_get_sum_of_products_expenses_per_month_by_username(self):
+        self.db.add_user(self.user_id, self.is_admin, self.username, self.password)
+        self.db.add_expense(user_id=self.user_id, amount=5, category_codename='products')
+        result = self.db.get_sum_of_expenses(username=self.username, category='products', timedelta='month').__next__()
+        first_output = 5.0
+        self.assertEqual(result, first_output)
+
+    def test_get_sum_of_products_expenses_per_week_by_username(self):
+        self.db.add_user(self.user_id, self.is_admin, self.username, self.password)
+        self.db.add_expense(user_id=self.user_id, amount=5, category_codename='products')
+        result = self.db.get_sum_of_expenses(username=self.username, category='products', timedelta='week').__next__()
+        first_output = 5.0
+        self.assertEqual(result, first_output)
+
+    def test_get_sum_of_products_expenses_per_day_by_username(self):
+        self.db.add_user(self.user_id, self.is_admin, self.username, self.password)
+        self.db.add_expense(user_id=self.user_id, amount=5, category_codename='products')
+        result = self.db.get_sum_of_expenses(username=self.username, category='products', timedelta='day').__next__()
+        first_output = 5.0
+        self.assertEqual(result, first_output)
 
     def test_get_sum_of_all_expenses_all(self):
         self.db.add_user(self.user_id, self.is_admin, self.username, self.password)
@@ -97,6 +140,14 @@ class TestDatabase(unittest.TestCase):
         result = self.db.get_sum_of_expenses(self.user_id, category='products', timedelta='day').__next__()
         first_output = 5.0
         self.assertEqual(result, first_output)
+
+    def test_get_category_name_by_codename(self):
+        result = self.db._get_category_name_by_codename(codename='products')
+        self.assertEqual(result, '🛒 Продукты')
+
+    def test_get_full_category_name_by_substring(self):
+        result = self.db.get_full_category_codename_by_substring(substring='Продукты')
+        self.assertEqual(result, 'products')
 
     def tearDown(self):
         self.db.delete_db(self.db_path)
