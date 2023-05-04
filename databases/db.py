@@ -1,3 +1,4 @@
+import hashlib
 import logging
 import os
 import sqlite3 as sq
@@ -46,9 +47,10 @@ class Database:
         except OperationalError:
             logging.info('Database users already exists')
 
-    def check_user(self, user_id: int = None, username: str = None) -> bool | int:
+    def check_user(self, user_id: int = None, username: str = None, password: str = None) -> bool | int:
         """Checking if a user exists in the database
 
+        :param password: password
         :param username: username
         :param user_id: user id
         :return: True if user exists, False if user not exists
@@ -66,6 +68,20 @@ class Database:
                         return True
                     else:
                         return False
+            except Exception as ex:
+                logging.error(repr(ex))
+        elif username and password:
+            try:
+                with self.connection:
+                    password_hash = hashlib.sha256(password.encode('utf-8')).hexdigest()
+                    self.cursor.execute(
+                        "SELECT username "
+                        "FROM users "
+                        "WHERE username = ? AND  password = ?",
+                        (username, password_hash)
+                    )
+                    result = bool(len(self.cursor.fetchall()))
+                    return result
             except Exception as ex:
                 logging.error(repr(ex))
         elif username:
@@ -129,11 +145,12 @@ class Database:
         """
         try:
             with self.connection:
+                password_hash = hashlib.sha256(password.encode('utf-8')).hexdigest()
                 self.cursor.execute(
                     "INSERT INTO users (id, is_admin, is_active, username, password, last_active)"
                     "SELECT ?, ?, ?, ?, ?, datetime('now', 'localtime')"
                     "WHERE NOT EXISTS(SELECT id FROM users WHERE id = ?)",
-                    (user_id, is_admin, True, username, password, user_id))
+                    (user_id, is_admin, True, username, password_hash, user_id))
 
                 if self.cursor.rowcount == 0:
                     raise ValueError(f"User with ID [{user_id}] already exists in the database")

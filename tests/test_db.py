@@ -46,6 +46,11 @@ class TestDatabase(unittest.TestCase):
         result = self.db.check_user(user_id=self.user_id, username=self.username)
         self.assertEqual(result, True)
 
+    def test_check_user_by_username_and_password(self):
+        self.db.add_user(self.user_id, self.is_admin, self.username, self.password)
+        result = self.db.check_user(user_id=self.user_id, username=self.username, password=self.password)
+        self.assertEqual(result, True)
+
     def test_add_expense(self):
         self.db.add_user(self.user_id, self.is_admin, self.username, self.password)
         result = self.db.add_expense(user_id=self.user_id, amount=5, category_codename='products')
