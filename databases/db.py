@@ -77,7 +77,7 @@ class Database:
                     self.cursor.execute(
                         "SELECT username "
                         "FROM users "
-                        "WHERE username = ? AND  password = ?",
+                        "WHERE username = ? AND password = ?",
                         (username, password_hash)
                     )
                     result = bool(len(self.cursor.fetchall()))
@@ -269,7 +269,8 @@ class Database:
         except Exception as ex:
             logging.error(repr(ex))
 
-    def delete_db(self, db_file: str):
+    @staticmethod
+    def delete_db(db_file: str):
         """Deleting a database
 
         :return: None
