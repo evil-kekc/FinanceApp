@@ -1,200 +1,138 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="utf-8">
-    <title>Учет финансов</title>
-    <style>
-        ul.expenses {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            list-style-type: none;
-            padding: 0;
-        }
+{% extends 'base.html' %}
+{% block content %}
+    <title>Home page</title>
+    <head>
+        <meta charset="utf-8">
+        <title>Учет финансов</title>
+        <style>
+            ul.expenses {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                list-style-type: none;
+                padding: 0;
+            }
 
-        ul.expenses li {
-            margin-bottom: 10px;
-            padding: 5px;
-            border-radius: 5px;
-            background-color: #f7f7f7;
-            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
-        }
+            ul.expenses li {
+                margin-bottom: 10px;
+                padding: 5px;
+                border-radius: 5px;
+                background-color: #f7f7f7;
+                box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+            }
 
-        ul.expenses li span {
-            font-weight: bold;
-            text-align: center;
-        }
+            ul.expenses li span {
+                font-weight: bold;
+                text-align: center;
+            }
 
-        body {
-            background-color: #f7f7f7;
-            font-family: sans-serif;
-        }
+            body {
+                background-color: #f7f7f7;
+                font-family: sans-serif;
+            }
 
-        h1 {
-            color: #4CAF50;
-            font-size: 3rem;
-            text-align: center;
-            margin-top: 1rem;
-        }
+            h1 {
+                color: #4CAF50;
+                font-size: 3rem;
+                text-align: center;
+                margin-top: 1rem;
+            }
 
-        form {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin-top: 2rem;
-        }
+            form {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                margin-top: 2rem;
+            }
 
-        label {
-            font-size: 1.2rem;
-            margin-bottom: 0.5rem;
-            color: #4CAF50;
-        }
+            label {
+                font-size: 1.2rem;
+                margin-bottom: 0.5rem;
+                color: #4CAF50;
+            }
 
-        select,
-        input[type="number"],
-        button[type="submit"] {
-            font-size: 1.2rem;
-            padding: 0.5rem;
-            border-radius: 5px;
-            border: none;
-            margin-bottom: 1rem;
-        }
+            select,
+            input[type="number"],
+            button[type="submit"] {
+                font-size: 1.2rem;
+                padding: 0.5rem;
+                border-radius: 5px;
+                border: none;
+                margin-bottom: 1rem;
+            }
 
-        select {
-            width: 200px;
-            background-color: white;
-        }
+            select {
+                width: 200px;
+                background-color: white;
+            }
 
-        button[type="submit"] {
-            background-color: #4CAF50;
-            color: white;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
+            button[type="submit"] {
+                background-color: #4CAF50;
+                color: white;
+                cursor: pointer;
+                transition: background-color 0.3s;
+            }
 
-        button[type="submit"]:hover {
-            background-color: #3e8e41;
-        }
+            button[type="submit"]:hover {
+                background-color: #3e8e41;
+            }
 
-        h2 {
-            color: #4CAF50;
-            font-size: 2rem;
-            margin-top: 2rem;
-            text-align: center;
-        }
+            h2 {
+                color: #4CAF50;
+                font-size: 2rem;
+                margin-top: 2rem;
+                text-align: center;
+            }
 
-        ul {
-            list-style-type: none;
-            margin: 0;
-            padding: 0;
-        }
+            ul {
+                list-style-type: none;
+                margin: 0;
+                padding: 0;
+            }
 
-        li {
-            font-size: 1.2rem;
-            margin-bottom: 0.5rem;
-        }
+            li {
+                font-size: 1.2rem;
+                margin-bottom: 0.5rem;
+            }
+        </style>
+    </head>
+    <body>
+    <h1>Учет финансов</h1>
 
-        .expenses-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 18px;
-        }
+    <h2>Все расходы:</h2>
+    <ul class="expenses">
+        {% for expense in total_expenses %}
+            <li>
+                <span>{{ expense.category }}:</span> {{ expense.amount }} руб.
+            </li>
+        {% endfor %}
+    </ul>
+    <h2>Расходы за месяц:</h2>
+    <ul class="expenses">
+        {% for expense in month_expenses %}
+            <li>
+                <span>{{ expense.category }}:</span> {{ expense.amount }} руб.
+            </li>
+        {% endfor %}
+    </ul>
 
-        .expenses-table th {
-            background-color: #f2f2f2;
-            text-align: center;
-            padding: 10px;
-        }
+    <h2>Расходы за неделю:</h2>
+    <ul class="expenses">
+        {% for expense in week_expenses %}
+            <li>
+                <span>{{ expense.category }}:</span> {{ expense.amount }} руб.
+            </li>
+        {% endfor %}
+    </ul>
 
-        .expenses-table td {
-            border: 1px solid #ddd;
-            text-align: center;
-            padding: 10px;
-        }
-    </style>
-</head>
-<body>
-<h1>Учет финансов</h1>
-<form method="POST" action="/add_expense">
-    <label for="category">Категория:</label>
-    <select name="category" id="category">
-        <option value="Продукты">🛒 Продукты</option>
-        <option value="Кофе">☕️ Кофе</option>
-        <option value="Обед">🍽️ Обед</option>
-        <option value="Кафе">🍔 Кафе</option>
-        <option value="Общ. транспорт">🚌 Общ. транспорт</option>
-        <option value="Такси">🚕 Такси</option>
-        <option value="Телефон">☎️ Телефон</option>
-        <option value="Книги">📚 Книги</option>
-        <option value="Интернет">📡 Интернет</option>
-        <option value="Подписки">✅ Подписки</option>
-        <option value="Прочее">Прочее</option>
-    </select>
-    <label for="amount">Сумма:</label>
-    <input type="number" id="amount" name="amount" required>
-    <button type="submit">Добавить</button>
-</form>
+    <h2>Расходы за день:</h2>
+    <ul class="expenses">
+        {% for expense in day_expenses %}
+            <li>
+                <span>{{ expense.category }}:</span> {{ expense.amount }} руб.
+            </li>
+        {% endfor %}
+    </ul>
 
-<h2>Все расходы:</h2>
-<ul class="expenses">
-    {% for expense in total_expenses %}
-        <li>
-            <span>{{ expense.category }}:</span> {{ expense.amount }} руб.
-        </li>
-    {% endfor %}
-</ul>
-<h2>Расходы за месяц:</h2>
-<ul class="expenses">
-    {% for expense in month_expenses %}
-        <li>
-            <span>{{ expense.category }}:</span> {{ expense.amount }} руб.
-        </li>
-    {% endfor %}
-</ul>
-{#<h2>Расходы за неделю:</h2>#}
-{#<ul class="expenses">#}
-{#    {% for expense in week_expenses %}#}
-{#        <li>#}
-{#            <span>{{ expense.category }}:</span> {{ expense.amount }} руб.#}
-{#        </li>#}
-{#    {% endfor %}#}
-{#</ul>#}
-
-<h2>Расходы за неделю:</h2>
-<table class="expenses-table">
-    <thead>
-    <tr>
-        <th>Категория</th>
-        <th>Сумма, руб.</th>
-    </tr>
-    </thead>
-    <tbody>
-    {% for expense in week_expenses %}
-        <tr>
-            <td>{{ expense.category }}</td>
-            <td>{{ expense.amount }}</td>
-        </tr>
-    {% endfor %}
-    </tbody>
-</table>
-
-<h2>Расходы за день:</h2>
-<table class="expenses-table">
-    <thead>
-    <tr>
-        <th>Категория</th>
-        <th>Сумма, руб.</th>
-    </tr>
-    </thead>
-    <tbody>
-    {% for expense in day_expenses %}
-        <tr>
-            <td>{{ expense.category }}</td>
-            <td>{{ expense.amount }}</td>
-        </tr>
-    {% endfor %}
-    </tbody>
-</table>
-
-</body>
-</html>
+    </body>
+{% endblock content %}

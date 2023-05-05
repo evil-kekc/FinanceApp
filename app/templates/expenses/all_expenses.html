@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% block content %}
+    <title>All expenses</title>
+    <style>
+        body {
+            background-color: #f7f7f7;
+            font-family: sans-serif;
+        }
+
+        ul.expenses {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            list-style-type: none;
+            padding: 0;
+        }
+
+        ul.expenses li {
+            margin-bottom: 10px;
+            padding: 5px;
+            border-radius: 5px;
+            background-color: #f7f7f7;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+        }
+
+        ul.expenses li span {
+            font-weight: bold;
+            text-align: center;
+        }
+
+        h2 {
+            color: #4CAF50;
+            font-size: 2rem;
+            margin-top: 2rem;
+            text-align: center;
+        }
+
+        ul {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        li {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+    </style>
+    <body>
+    <h2>Все расходы:</h2>
+
+    <ul class="expenses">
+        {% for expense in total_expenses %}
+            <li>
+                <span>{{ expense.category }}:</span> {{ expense.amount }} руб.
+            </li>
+        {% endfor %}
+    </ul>
+    </body>
+{% endblock content %}

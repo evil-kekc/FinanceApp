@@ -11,6 +11,7 @@ LOGGER = 'bot.log'
 
 config = load_config(fr'{BASE_DIR}/config/bot_config.ini')
 ADMIN_ID = config.tg_bot.admin_id
+TOKEN = config.tg_bot.token
 
 bot = Bot(token=config.tg_bot.token)
 dp = Dispatcher(bot, storage=MemoryStorage())

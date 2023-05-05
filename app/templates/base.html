@@ -4,11 +4,58 @@
     <meta charset="UTF-8" lang="ru">
     <title>{% block title %}{% endblock %}</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <style>
+        .sidebar {
+            background-color: #F8F9FA;
+            height: 100%;
+            max-width: 220px; /* добавляем максимальную ширину */
+            overflow-x: hidden; /* скрываем горизонтальную прокрутку */
+        }
+    </style>
 </head>
 <body>
-{% block content %}{% endblock %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-3 sidebar">
+            <h3 class="text-center mt-3">Меню</h3>
+            <hr>
+            <button class="btn btn-primary w-100 mb-3">
+                <a href="/home" style="color: white; text-decoration: none;">Главная</a>
+            </button>
+            <button class="btn btn-primary w-100 mb-3">
+                <a href="/all_expenses" style="color: white; text-decoration: none;">Все расходы</a>
+            </button>
+            <button class="btn btn-primary w-100 mb-3">
+                <a href="/month_expenses" style="color: white; text-decoration: none;">Расходы за месяц</a>
+            </button>
+            <button class="btn btn-primary w-100 mb-3">
+                <a href="/week_expenses" style="color: white; text-decoration: none;">Расходы за неделю</a>
+            </button>
+            <button class="btn btn-primary w-100 mb-3">
+                <a href="/day_expenses" style="color: white; text-decoration: none;">Расходы за день</a>
+            </button>
+            <button class="btn btn-primary w-100 mb-3">
+                <a href="/add_expense" style="color: white; text-decoration: none;">Добавить расход</a>
+            </button>
+        </div>
+        <div class="col-md-9">
+            <h1 class="text-center mt-3">{% block page_title %}{% endblock %}</h1>
+            <hr>
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+</div>
+<!-- jQuery -->
 <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+<!-- Popper.js -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+<!-- Bootstrap JS -->
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+<!-- Custom JS -->
+<script>
+    $(document).ready(function () {
+        // Code to execute when the document is ready
+    });
+</script>
 </body>
 </html>

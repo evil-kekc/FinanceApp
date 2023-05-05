@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+{% block content %}
+    <title>Add expenses</title>
+    <style>
+        body {
+                background-color: #f7f7f7;
+                font-family: sans-serif;
+            }
+
+        h1 {
+            color: #4CAF50;
+            font-size: 3rem;
+            text-align: center;
+            margin-top: 1rem;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 2rem;
+        }
+
+        label {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+            color: #4CAF50;
+        }
+
+        select,
+        input[type="number"],
+        button[type="submit"] {
+            font-size: 1.2rem;
+            padding: 0.5rem;
+            border-radius: 5px;
+            border: none;
+            margin-bottom: 1rem;
+        }
+
+        select {
+            width: 200px;
+            background-color: white;
+        }
+
+        button[type="submit"] {
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button[type="submit"]:hover {
+            background-color: #3e8e41;
+        }
+
+        h2 {
+            color: #4CAF50;
+            font-size: 2rem;
+            margin-top: 2rem;
+            text-align: center;
+        }
+    </style>
+    <body>
+    <h1>Добавление расхода</h1>
+    <form method="POST" action="/add_expense">
+        <label for="category">Категория:</label>
+        <select name="category" id="category">
+            <option value="Продукты">🛒 Продукты</option>
+            <option value="Кофе">☕️ Кофе</option>
+            <option value="Обед">🍽️ Обед</option>
+            <option value="Кафе">🍔 Кафе</option>
+            <option value="Общ. транспорт">🚌 Общ. транспорт</option>
+            <option value="Такси">🚕 Такси</option>
+            <option value="Телефон">☎️ Телефон</option>
+            <option value="Книги">📚 Книги</option>
+            <option value="Интернет">📡 Интернет</option>
+            <option value="Подписки">✅ Подписки</option>
+            <option value="Прочее">Прочее</option>
+        </select>
+        <label for="amount">Сумма:</label>
+        <input type="number" id="amount" name="amount" required>
+        <button type="submit">Добавить</button>
+    </form>
+    </body>
+{% endblock content %}
