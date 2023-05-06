@@ -7,19 +7,20 @@ from aiogram.utils.exceptions import BadRequest
 from fastapi import FastAPI, Request, Form, Response
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
+from starlette import status
 from starlette.responses import RedirectResponse
 
 from bot_app.handlers import add_expenses, common_handlers, get_expenses, registration
 from config.bot_config import bot, dp, BASE_DIR, LOGGER, TOKEN
 from config.bot_config import config
-from config.middlewares import UpdateLastActiveMiddleware, ThrottlingMiddleware, CheckUserMiddleware
+from config.middlewares import UpdateLastActiveMiddleware, CheckUserMiddleware
 from databases.db import Database
 
-logging.basicConfig(level=logging.INFO, filename=f"{str(BASE_DIR)}/{LOGGER}",
+logging.basicConfig(level=logging.INFO, filename=fr"{str(BASE_DIR)}/{LOGGER}",
                     format="%(asctime)s | %(levelname)s | %(funcName)s: %(lineno)d | %(message)s",
                     datefmt="%H:%M:%S")
 
-DATABASE = Database(f"{BASE_DIR}/databases/bot.db", f"{BASE_DIR}/databases/create_db.sql")
+DATABASE = Database(fr"{BASE_DIR}/databases/bot.db", f"{BASE_DIR}/databases/create_db.sql")
 
 app = FastAPI()
 templates = Jinja2Templates(directory="app/templates")
@@ -28,10 +29,10 @@ WEBHOOK_PATH = f"/bot/{TOKEN}"
 WEBHOOK_URL = config.tg_bot.host_url + WEBHOOK_PATH
 
 
-async def set_commands(bot: Bot):
+async def set_commands(bot_: Bot):
     """Creating a bot menu
 
-    :param bot: an instance of the bot class
+    :param bot_: an instance of the bot class
     :return:
     """
     commands = [
@@ -44,7 +45,7 @@ async def set_commands(bot: Bot):
         BotCommand(command='/get_day_expenses', description='Расходы за день'),
     ]
 
-    await bot.set_my_commands(commands)
+    await bot_.set_my_commands(commands)
 
 
 async def bot_main():
@@ -55,8 +56,6 @@ async def bot_main():
     logging.info('Starting bot')
     dp.middleware.setup(CheckUserMiddleware())
     dp.middleware.setup(UpdateLastActiveMiddleware())
-    if config.tg_bot.throttled:
-        dp.middleware.setup(ThrottlingMiddleware(limit=5))
 
     common_handlers(dp)
     registration(dp)
@@ -109,6 +108,8 @@ async def on_shutdown():
 
     :return:
     """
+    await dp.storage.close()
+    await dp.storage.wait_closed()
     await bot.session.close()
     await bot.delete_webhook()
 
@@ -184,7 +185,7 @@ async def add_expense(request: Request, amount: int = Form(...), category: str =
         category = DATABASE.get_full_category_codename_by_substring(category)
         DATABASE.add_expense(amount=amount, category_codename=category, username=username)
 
-    return RedirectResponse(url='/all_expenses', status_code=303)
+    return RedirectResponse(url='/all_expenses', status_code=status.HTTP_303_SEE_OTHER)
 
 
 @app.get('/{expense}')

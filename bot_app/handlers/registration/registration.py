@@ -54,5 +54,5 @@ def register_handlers_registration(dp: Dispatcher):
     :return:
     """
     dp.register_callback_query_handler(start_registration, text='registration')
-    dp.register_message_handler(get_username,  state=RegistrationStates.get_username)
-    dp.register_message_handler(confirmation,  state=RegistrationStates.get_password)
+    dp.register_message_handler(get_username, state=RegistrationStates.get_username)
+    dp.register_message_handler(confirmation, state=RegistrationStates.get_password)

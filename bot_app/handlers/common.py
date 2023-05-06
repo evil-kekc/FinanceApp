@@ -1,11 +1,13 @@
 from aiogram import Dispatcher, types
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters import Text
-from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+from aiogram.types import InlineKeyboardButton
 
+from config.bot_config import antispam
 from handlers.expense import DATABASE
 
 
+@antispam(rate=3, interval=5)
 async def cmd_start(message: types.Message, state: FSMContext):
     """Handling the start command
 
@@ -24,6 +26,7 @@ async def cmd_start(message: types.Message, state: FSMContext):
                              reply_markup=types.ReplyKeyboardRemove())
 
 
+@antispam(rate=3, interval=5)
 async def get_list_of_expenses(message: types.Message):
     """Displaying information about expense categories
 
@@ -39,6 +42,7 @@ async def get_list_of_expenses(message: types.Message):
     await message.answer('Доступны следующие категории расходов: ', reply_markup=keyboard)
 
 
+@antispam(rate=3, interval=5)
 async def cmd_cancel(message: types.Message, state: FSMContext):
     """Handling the cancel command
 

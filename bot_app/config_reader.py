@@ -8,7 +8,6 @@ class TgBot:
     token: str
     admin_id: int
     host_url: str
-    throttled: bool
 
 
 @dataclass
@@ -32,7 +31,6 @@ def load_config(path: str):
         tg_bot=TgBot(
             token=tg_bot['token'],
             admin_id=int(tg_bot['admin_id']),
-            host_url=tg_bot['host_url'],
-            throttled=bool(int(tg_bot['throttled']))
+            host_url=tg_bot['host_url']
         )
     )
